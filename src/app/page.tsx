@@ -64,13 +64,14 @@ const SchengenVisaCalculator: React.FC = () => {
     if (!highlightedRange) return false;
     const [start, end] = highlightedRange;
     const endAddOneDay = addDays(new Date(end), 1);
+    const startLessOneDay = subDays(new Date(start), 1);
     // const daysBetween = Math.floor(
     //   (new Date(endAddOneDay).getTime() - new Date(start).getTime()) /
     //     (1000 * 3600 * 24)
     // );
     // console.log('daysBetween', daysBetween);
     const isInRange =
-      isAfter(new Date(day), new Date(start)) &&
+      isAfter(new Date(day), new Date(startLessOneDay)) &&
       isBefore(new Date(day), new Date(endAddOneDay));
 
     return isInRange;
@@ -79,6 +80,7 @@ const SchengenVisaCalculator: React.FC = () => {
   // Calculate selected days within the highlighted 180-day range
   const calculateSelectedInRange = () => {
     if (!highlightedRange) return 0;
+    console.log('selectedDays', selectedDays);
     return selectedDays.filter((day) => isInHighlightedRange(day)).length;
   };
 
