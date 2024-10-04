@@ -3,11 +3,13 @@ import React, { useEffect, useState } from 'react';
 import { Sidebar } from './sidebar';
 import { Calendar } from './calender';
 import { Calender, Nullable } from './types';
+import NameDialog from './NameDialog';
 
 const Page: React.FC = () => {
   const [calenders, setCalenders] = useState<Calender[]>([]);
   const [selectedCalender, setSelectedCalender] =
     useState<Nullable<Calender>>(null);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     if (calenders.length > 0) {
@@ -15,11 +17,11 @@ const Page: React.FC = () => {
     }
   }, []);
 
-  const onAddCalender = () => {
+  const onAddCalender = (name: string) => {
     const id = calenders.length.toString();
     const newCalender: Calender = {
       id,
-      name: `Calender ${id}`,
+      name,
       startDate: '2024-01-01',
       endDate: '2025-12-31',
       highlightedRange: null,
@@ -63,10 +65,15 @@ const Page: React.FC = () => {
       <Sidebar
         selectedCalender={selectedCalender}
         onChangeSelectedCalender={onChangeSelectedCalender}
-        onAddCalender={onAddCalender}
+        onAddCalender={() => setIsOpen(true)}
         calenders={calenders}
       />
       {displayCalanders()}
+      <NameDialog
+        isOpen={isOpen}
+        setIsOpen={(isOpen: boolean) => setIsOpen(isOpen)}
+        onAddCalender={onAddCalender}
+      />
     </div>
   );
 };

@@ -15,27 +15,8 @@ const Calendar = ({
   onCalenderUpdate: (calender: Calender) => void;
 }) => {
   const [selectType, setSelectType] = useState<SelectType>('range');
-  const selectedDays = calender.selectedDays;
-  const highlightedRange = calender.highlightedRange;
-  console.log('Selected days:', selectedDays);
-  console.log('Highlighted range:', highlightedRange);
-
-  //   const [selectedDays, setSelectedDays] = useState<string[]>(
-  //     calender.selectedDays
-  //   );
-  //   const [highlightedRange, setHighlightedRange] = useState<
-  //     Nullable<[string, string]>
-  //   >(calender?.highlightedRange);
-
-  const startDate = new Date(calender.startDate);
-  const endDate = new Date(calender.endDate);
-
-  const totalDays = Math.floor(
-    (endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24)
-  );
-  const days = Array.from({ length: totalDays }, (_, i) =>
-    format(addDays(startDate, i), 'yyyy-MM-dd')
-  );
+  const { selectedDays, highlightedRange, endDate, startDate } = calender;
+  const days = getDays(startDate, endDate);
 
   const toggleDaySelection = (day: string) => {
     let newSelectedDays = [...selectedDays];
@@ -52,12 +33,6 @@ const Calendar = ({
   };
 
   const handleDayClick = (day: string) => {
-    // if (isInHighlightedRange(day) && selectType === 'range') {
-    //     console.log('Selected days:', selectedDays);
-    //     toggleDaySelection(day);
-    //     setSelectType('single');
-    //     return;
-    // }
     if (selectType === 'single') {
       toggleDaySelection(day);
       return;
@@ -74,7 +49,6 @@ const Calendar = ({
     }
   };
 
-  // Check if a day is in the highlighted range
   const isInHighlightedRange = (day: string) => {
     if (!highlightedRange) return false;
     const [start, end] = highlightedRange;
@@ -84,7 +58,6 @@ const Calendar = ({
     return isInRange;
   };
 
-  // Tooltip for range mode
   const getTooltipMessage = () => {
     return selectType === 'range'
       ? 'This is the past 180-day range from your selected day.'
@@ -179,3 +152,16 @@ const Calendar = ({
 };
 
 export { Calendar };
+
+const getDays = (startDateString: string, endDateString: string) => {
+  const startDate = new Date(startDateString);
+  const endDate = new Date(endDateString);
+  const totalDays = Math.floor(
+    (endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24)
+  );
+  const days = Array.from({ length: totalDays }, (_, i) =>
+    format(addDays(startDate, i), 'yyyy-MM-dd')
+  );
+
+  return days;
+};
