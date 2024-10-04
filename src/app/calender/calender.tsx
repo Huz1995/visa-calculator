@@ -1,28 +1,34 @@
 'use client';
 import React, { useState } from 'react';
-import {
-  format,
-  addDays,
-  addYears,
-  isAfter,
-  isBefore,
-  subDays,
-} from 'date-fns';
-import { Switch } from '@/components/ui/switch';
+import { format, addDays, isAfter, isBefore, subDays } from 'date-fns';
+import { Switch } from '@/components/ui';
 import { CircleHelp } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Calender } from './types';
 type SelectType = 'single' | 'range';
 
-const SchengenVisaCalculator: React.FC = () => {
+const Calendar = ({
+  calender,
+  onCalenderUpdate,
+}: {
+  calender: Calender;
+  onCalenderUpdate: (calender: Calender) => void;
+}) => {
   const [selectType, setSelectType] = useState<SelectType>('range');
-  const [selectedDays, setSelectedDays] = useState<string[]>([]);
-  const [highlightedRange, setHighlightedRange] = useState<
-    [string, string] | null
-  >(null);
+  const selectedDays = calender.selectedDays;
+  const highlightedRange = calender.highlightedRange;
+  console.log('Selected days:', selectedDays);
+  console.log('Highlighted range:', highlightedRange);
 
-  const today = new Date();
-  const startDate = new Date('2024-01-01');
-  const endDate = addYears(today, 2.5);
+  //   const [selectedDays, setSelectedDays] = useState<string[]>(
+  //     calender.selectedDays
+  //   );
+  //   const [highlightedRange, setHighlightedRange] = useState<
+  //     Nullable<[string, string]>
+  //   >(calender?.highlightedRange);
+
+  const startDate = new Date(calender.startDate);
+  const endDate = new Date(calender.endDate);
 
   const totalDays = Math.floor(
     (endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24)
@@ -32,18 +38,26 @@ const SchengenVisaCalculator: React.FC = () => {
   );
 
   const toggleDaySelection = (day: string) => {
-    setSelectedDays((prevSelectedDays) =>
-      prevSelectedDays.includes(day)
-        ? prevSelectedDays.filter((d) => d !== day)
-        : [...prevSelectedDays, day]
-    );
-
-    if (selectType === 'range') {
-      setSelectType('single');
+    let newSelectedDays = [...selectedDays];
+    if (newSelectedDays.includes(day)) {
+      newSelectedDays = newSelectedDays.filter((d) => d !== day);
+    } else {
+      newSelectedDays.push(day);
     }
+    const newCalender: Calender = {
+      ...calender,
+      selectedDays: newSelectedDays,
+    };
+    onCalenderUpdate(newCalender);
   };
 
   const handleDayClick = (day: string) => {
+    // if (isInHighlightedRange(day) && selectType === 'range') {
+    //     console.log('Selected days:', selectedDays);
+    //     toggleDaySelection(day);
+    //     setSelectType('single');
+    //     return;
+    // }
     if (selectType === 'single') {
       toggleDaySelection(day);
       return;
@@ -52,7 +66,11 @@ const SchengenVisaCalculator: React.FC = () => {
       const clickedDate = new Date(day);
       const startHighlight = format(subDays(clickedDate, 179), 'yyyy-MM-dd');
       const endHighlight = format(clickedDate, 'yyyy-MM-dd');
-      setHighlightedRange([startHighlight, endHighlight]);
+      const newCalender: Calender = {
+        ...calender,
+        highlightedRange: [startHighlight, endHighlight],
+      };
+      onCalenderUpdate(newCalender);
     }
   };
 
@@ -88,14 +106,10 @@ const SchengenVisaCalculator: React.FC = () => {
 
   return (
     <div className="w-full h-screen flex flex-col">
-      <header className="p-4 bg-gray-800 text-white text-xl flex justify-between items-center">
-        <h2>Schengen Visa Calculator</h2>
-      </header>
-
       <div className="flex mt-2 mb-2 mx-4 gap-2 items-center">
         <div className="relative group">
           <CircleHelp className="text-xl text-gray-600 cursor-pointer" />
-          <div className="absolute hidden group-hover:block w-64 bg-white text-gray-700 text-sm rounded-lg shadow-lg p-2 mt-1">
+          <div className="absolute hidden z-10 group-hover:block w-64 bg-white text-gray-700 text-sm rounded-lg shadow-lg p-2 mt-1">
             {selectType === 'range' ? (
               <p>
                 <strong>Range Mode:</strong> Click a day to highlight the past
@@ -164,4 +178,4 @@ const SchengenVisaCalculator: React.FC = () => {
   );
 };
 
-export default SchengenVisaCalculator;
+export { Calendar };
