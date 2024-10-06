@@ -1,10 +1,10 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { format, addDays, isAfter, isBefore, subDays } from 'date-fns';
 import { Switch } from '@/components/ui';
 import { CircleHelp } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Calender } from './types';
+import { Calender, Nullable } from './types';
 type SelectType = 'single' | 'range';
 
 const Calendar = ({
@@ -32,6 +32,42 @@ const Calendar = ({
     onCalenderUpdate(newCalender);
   };
 
+  const isInHighlightedRange = (day: string) => {
+    if (!highlightedRange) return false;
+    const [start, end] = highlightedRange;
+    const isInRange =
+      isAfter(new Date(day), subDays(new Date(start), 1)) &&
+      isBefore(new Date(day), addDays(new Date(end), 1));
+    return isInRange;
+  };
+
+  const getTooltipMessage = () => {
+    return selectType === 'range'
+      ? 'This is the past 180-day range from your selected day.'
+      : '';
+  };
+
+  const handleDayHover = (day: string) => {
+    if (shiftPressedRef.current) {
+      toggleDaySelection(day);
+    }
+  };
+
+  const getBlockColor = (day: string) => {
+    if (selectedDays.includes(day) && isInHighlightedRange(day)) {
+      return 'bg-blue-500 text-white border-4 border-blue-700';
+    }
+    if (selectedDays.includes(day)) {
+      return 'bg-red-500 text-white border-4 border-red-700';
+    }
+    if (isInHighlightedRange(day)) {
+      return 'bg-yellow-300';
+    }
+    return 'bg-gray-200';
+  };
+
+  const shiftPressedRef = useRef(false);
+
   const handleDayClick = (day: string) => {
     if (selectType === 'single') {
       toggleDaySelection(day);
@@ -49,33 +85,30 @@ const Calendar = ({
     }
   };
 
-  const isInHighlightedRange = (day: string) => {
-    if (!highlightedRange) return false;
-    const [start, end] = highlightedRange;
-    const isInRange =
-      isAfter(new Date(day), subDays(new Date(start), 1)) &&
-      isBefore(new Date(day), addDays(new Date(end), 1));
-    return isInRange;
-  };
+  // Track whether the Shift key is held
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Shift') {
+        console.log('Shift Pressed');
+        shiftPressedRef.current = true;
+      }
+    };
 
-  const getTooltipMessage = () => {
-    return selectType === 'range'
-      ? 'This is the past 180-day range from your selected day.'
-      : '';
-  };
+    const handleKeyUp = (event: KeyboardEvent) => {
+      if (event.key === 'Shift') {
+        console.log('Shift Released');
+        shiftPressedRef.current = false;
+      }
+    };
 
-  const getBlockColor = (day: string) => {
-    if (selectedDays.includes(day) && isInHighlightedRange(day)) {
-      return 'bg-blue-500 text-white border-4 border-blue-700';
-    }
-    if (selectedDays.includes(day)) {
-      return 'bg-red-500 text-white border-4 border-red-700';
-    }
-    if (isInHighlightedRange(day)) {
-      return 'bg-yellow-300';
-    }
-    return 'bg-gray-200';
-  };
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, []);
 
   return (
     <div className="w-full h-screen flex flex-col">
@@ -118,6 +151,7 @@ const Calendar = ({
           {days.map((day) => {
             return (
               <motion.div
+                onHoverStart={() => handleDayHover(day)}
                 key={day}
                 className={`flex items-center h-20 justify-center cursor-pointer border rounded-md p-2
                 ${getBlockColor(day)} 

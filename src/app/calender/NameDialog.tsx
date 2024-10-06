@@ -49,7 +49,11 @@ export default function NameDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={handleSubmit}>Add</Button>
+          <div className="w-full flex justify-end">
+            <Button className="w-28" onClick={handleSubmit}>
+              Add
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
