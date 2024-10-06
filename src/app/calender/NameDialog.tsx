@@ -21,7 +21,6 @@ export default function NameDialog({
   setIsOpen: (isOpen: boolean) => void;
   onAddCalender: (name: string) => void;
 }) {
-  const [mode, setMode] = useState<'add' | 'edit'>('add');
   const [calendarName, setCalendarName] = useState('');
 
   const handleSubmit = () => {
@@ -34,9 +33,7 @@ export default function NameDialog({
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>
-            {mode === 'add' ? 'Add New Calendar' : 'Edit Calendar'}
-          </DialogTitle>
+          <DialogTitle>Add New Calendar</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
@@ -52,9 +49,7 @@ export default function NameDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={handleSubmit}>
-            {mode === 'add' ? 'Add' : 'Save'}
-          </Button>
+          <Button onClick={handleSubmit}>Add</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

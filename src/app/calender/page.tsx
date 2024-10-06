@@ -4,30 +4,80 @@ import { Sidebar } from './sidebar';
 import { Calendar } from './calender';
 import { Calender, Nullable } from './types';
 import NameDialog from './NameDialog';
+import axios from 'axios';
+import { useMutation, useQuery, useQueryClient } from 'react-query';
 
 const Page: React.FC = () => {
-  const [calenders, setCalenders] = useState<Calender[]>([]);
+  const queryClient = useQueryClient();
+  const { data } = useQuery({
+    queryKey: 'calenders',
+    queryFn: async (): Promise<Calender> => {
+      const response = await axios.get('/api/calenders');
+      return response.data;
+    },
+  });
+  const calenders: Calender[] = Array.isArray(data) ? data : [];
+
+  const { mutate: addCalenderMutation } = useMutation({
+    mutationFn: async (calender: Calender) => {
+      try {
+        await axios.post('/api/calenders', calender);
+      } catch (error) {
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries('calenders');
+    },
+  });
+
+  const { mutate: updateCalenderMutation } = useMutation({
+    mutationFn: async (calender: Calender) => {
+      try {
+        await axios.put(`/api/calenders`, calender);
+      } catch (error) {
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries('calenders');
+    },
+  });
+
+  const { mutate: deleteCalenderMutation } = useMutation({
+    mutationFn: async (calenderId: string) => {
+      try {
+        await axios.delete(`/api/calenders/${calenderId}`);
+      } catch (error) {
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries('calenders');
+    },
+  });
+
   const [selectedCalender, setSelectedCalender] =
     useState<Nullable<Calender>>(null);
-  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    if (calenders.length > 0) {
+    if (!selectedCalender && calenders.length > 0) {
       setSelectedCalender(calenders[0]);
     }
-  }, []);
+  }, [calenders, selectedCalender]);
+
+  const [isOpen, setIsOpen] = useState(false);
 
   const onAddCalender = (name: string) => {
-    const id = calenders.length.toString();
     const newCalender: Calender = {
-      id,
+      id: '1',
       name,
       startDate: '2024-01-01',
       endDate: '2025-12-31',
       highlightedRange: null,
       selectedDays: [],
     };
-    setCalenders([...calenders, newCalender]);
+    addCalenderMutation(newCalender);
     setSelectedCalender(newCalender);
   };
 
@@ -36,11 +86,13 @@ const Page: React.FC = () => {
   };
 
   const onCalenderUpdate = (calender: Calender) => {
-    const newCalenders = calenders.map((c) =>
-      c.id === calender.id ? calender : c
-    );
-    setCalenders(newCalenders);
+    updateCalenderMutation(calender);
     setSelectedCalender(calender);
+  };
+
+  const deleteCalender = (calender: Calender) => {
+    deleteCalenderMutation(calender.id);
+    if (selectedCalender?.id === calender.id) setSelectedCalender(calenders[0]);
   };
 
   const displayCalanders = () => {
@@ -67,6 +119,7 @@ const Page: React.FC = () => {
         onChangeSelectedCalender={onChangeSelectedCalender}
         onAddCalender={() => setIsOpen(true)}
         calenders={calenders}
+        deleteCalender={deleteCalender}
       />
       {displayCalanders()}
       <NameDialog
